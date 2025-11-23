@@ -1,0 +1,21 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+title Component diagram for Sensor Gateway
+
+' External systems/containers
+System_Ext(Sensor, "Sensor")
+ContainerQueue(EventBus, "Event Bus", "RabbitMQ")
+Container(SensorService, "Sensor Service", "Go")
+
+Container_Boundary(SensorGateway, "Sensor Gateway") {
+    Component(TelemetryBridge, "Telemetry Bridge", "Go", "Forwards metrics to the Event Bus.")
+    Component(MetadataBridge, "Metadata Bridge", "Go", "Forwards setup sensor, command message to the system.")
+}
+
+Rel(MetadataBridge, Sensor, "Listens to events from scripts")
+Rel(Sensor, TelemetryBridge, "Sends telemetry")
+Rel(TelemetryBridge, EventBus, "Publishes events to")
+Rel(EventBus, MetadataBridge, "Consumes commands from")
+Rel_R(SensorService, MetadataBridge, "Sends settings from user")
+@enduml

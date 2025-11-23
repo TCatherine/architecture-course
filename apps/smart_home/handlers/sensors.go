@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -12,19 +13,22 @@ import (
 	"smarthome/services"
 
 	"github.com/gin-gonic/gin"
+	"smarthome/message_broker"
 )
 
 // SensorHandler handles sensor-related requests
 type SensorHandler struct {
 	DB                 *db.DB
 	TemperatureService *services.TemperatureService
+	Publisher          *message_broker.Publisher
 }
 
 // NewSensorHandler creates a new SensorHandler
-func NewSensorHandler(db *db.DB, temperatureService *services.TemperatureService) *SensorHandler {
+func NewSensorHandler(db *db.DB, temperatureService *services.TemperatureService, pub *message_broker.Publisher) *SensorHandler {
 	return &SensorHandler{
 		DB:                 db,
 		TemperatureService: temperatureService,
+		Publisher:          pub,
 	}
 }
 
@@ -142,6 +146,18 @@ func (h *SensorHandler) CreateSensor(c *gin.Context) {
 		return
 	}
 
+	eventBody, err := json.Marshal(sensor)
+	if err == nil {
+		err = h.Publisher.Publish("smart_home", "device.created", eventBody)
+		log.Printf("INFO: Send event about device created")
+		if err != nil {
+			// Log the error but don't fail the request
+			log.Printf("WARN: Failed to publish device.created event: %v", err)
+		}
+	} else {
+		log.Printf("WARN: Failed to marshal sensor for event: %v", err)
+	}
+
 	c.JSON(http.StatusCreated, sensor)
 }
 
@@ -165,6 +181,18 @@ func (h *SensorHandler) UpdateSensor(c *gin.Context) {
 		return
 	}
 
+	eventBody, err := json.Marshal(sensor)
+	if err == nil {
+		err = h.Publisher.Publish("smart_home", "device.updated", eventBody)
+		log.Printf("INFO: Send event about device updated")
+		if err != nil {
+			// Log the error but don't fail the request
+			log.Printf("WARN: Failed to publish device.updated event: %v", err)
+		}
+	} else {
+		log.Printf("WARN: Failed to marshal sensor for event: %v", err)
+	}
+
 	c.JSON(http.StatusOK, sensor)
 }
 
@@ -181,6 +209,20 @@ func (h *SensorHandler) DeleteSensor(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	payload := map[string]int{"id": id}
+    eventBody, err := json.Marshal(payload)
+
+    if err == nil {
+        // Use "device.deleted" as the routing key
+        err = h.Publisher.Publish("smart_home", "device.deleted", eventBody)
+        if err != nil {
+            log.Printf("WARN: Failed to publish device.deleted event for sensor ID %d: %v", id, err)
+        }
+    } else {
+        log.Printf("WARN: Failed to marshal payload for device.deleted event: %v", err)
+    }
+
 
 	c.JSON(http.StatusOK, gin.H{"message": "Sensor deleted successfully"})
 }

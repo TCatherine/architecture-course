@@ -1,0 +1,16 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+title Component diagram for User Service
+
+' External systems/containers
+Container(APIGateway, "API Gateway", "NGINX")
+ContainerDb(Database, "Database", "PostgreSQL")
+
+Container_Boundary(UserService, "User Service") {
+    Component(UserProfileService, "User Service", "Go", "Manages CRUD operations for user profiles. Generate access token")
+    Rel(UserProfileService, Database, "Executes SQL queries on", "JDBC/SQL")
+}
+
+Rel(APIGateway, UserProfileService, "Forwards API requests to", "HTTPS")
+@enduml

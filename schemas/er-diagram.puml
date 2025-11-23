@@ -1,0 +1,120 @@
+@startuml
+' ER Diagram for the SmartHome System
+
+title SmartHome System - Entity Relationship Diagram
+
+' --- ENTITIES ---
+
+entity "User" as user {
+  + user_id : UUID {PK}
+  --
+  email : VARCHAR(255) {UQ}
+  password_hash : VARCHAR(255)
+  full_name : VARCHAR(255)
+  created_at : TIMESTAMP
+}
+
+entity "Home" as home {
+  + home_id : UUID {PK}
+  --
+  # user_id : UUID {FK}
+  name : VARCHAR(255)
+  city: VARCHAR(255)
+  street: VARCHAR(255)
+  num: NUM
+  created_at : TIMESTAMP
+}
+
+entity "Sensor" as sensor {
+  + service_id : UUID {PK}
+  --
+  # home_id : UUID {FK}
+  name : VARCHAR(255)
+  type : VARCHAR(50) ' e.g., 'TEMPERATURE_SENSOR', 'LIGHT_SWITCH'
+  location: VARCHAR(50)
+  address : DSN
+  serial_number: NUM
+  state: VARCHAR(255)
+  created_at : TIMESTAMP
+}
+
+entity "Telemetry" as telemetry {
+  # **time : TIMESTAMP {PK}**
+  # **sensor_id : UUID {PK, FK}**
+  --
+  ' Common, frequently queried metrics are dedicated columns for performance
+  temperature : DOUBLE PRECISION
+  humidity : DOUBLE PRECISION
+  power_consumption: DOUBLE PRECISION
+  ' All other diverse and rare metrics go into a flexible JSONB column
+  **additional_metrics : JSONB**
+  ..
+  note
+    This is a TimescaleDB **Hypertable**,
+    partitioned by the 'time' column.
+    The primary key is a composite of (device_id, time).
+  end note
+}
+
+entity "Scenario" as scenario {
+  + scenario_id : UUID {PK}
+  --
+  # home_id : UUID {FK}
+  name : VARCHAR(255)
+  description : TEXT
+  is_enabled : BOOLEAN
+  created_at : TIMESTAMP
+}
+
+entity "Trigger" as trigger {
+  + trigger_id : UUID {PK}
+  --
+  # scenario_id : UUID {FK}
+  # sensor_id : UUID {FK, nullable}
+  type : VARCHAR(50) ' 'DEVICE', 'TIME'
+  attribute : VARCHAR(100) ' e.g., 'temperature', 'motion_detected'
+  schedule : VARCHAR(100) ' Cron expression, nullable
+}
+
+entity "Condition" as condition {
+  + condition_id : UUID {PK}
+  --
+  # scenario_id : UUID {FK}
+  # sensor_id : UUID {FK, nullable}
+  type : VARCHAR(50) ' e.g., 'DEVICE_STATE', 'TIME_OF_DAY'
+  attribute : VARCHAR(100)
+  operator : VARCHAR(20) ' 'EQUALS', 'GREATER_THAN', etc.
+  value : JSONB ' The value to compare against
+}
+
+entity "Action" as action {
+  + action_id : UUID {PK}
+  --
+  # scenario_id : UUID {FK}
+  # sensor_id : UUID {FK, nullable}
+  type : VARCHAR(50) ' 'DEVICE_COMMAND', 'NOTIFICATION'
+  command : VARCHAR(100) ' e.g., 'turn_on', 'set_temperature'
+  payload : JSONB ' e.g., {"temperature": 22}
+  message: TEXT ' nullable
+}
+
+
+' --- RELATIONSHIPS ---
+
+user ||--o{ home : "owns"
+home ||--o{ sensor : "contains"
+home ||--o{ scenario : "has"
+
+scenario }|--|| trigger : "is started by"
+scenario }|--o{ condition : "must meet"
+scenario }|--|| action : "executes"
+
+' Optional relationships from automation components to devices
+' A trigger, condition, or action might not be related to a specific device (e.g., a time-based trigger)
+trigger }o..|| sensor : "monitors"
+condition }o..|| sensor : "checks state of"
+action }o..|| sensor : "controls"
+
+sensor ||--o{ telemetry : "records"
+
+@enduml
