@@ -1,0 +1,49 @@
+@startuml
+title SmartHome Container Diagram
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Container.puml
+
+' Actors and External Systems
+Person(user, "User", "A user of the smart home")
+System_Ext(devices, "Sensor", "Light, Gate, Temperature sensors")
+
+' System Boundary
+System_Boundary(SmartHomeSystem, "SmartHome System") {
+' === Gateways (Entry Points) ===
+Container(APIGateway, "API Gateway", "NGINX", "Single entry point for all API requests. Handles auth, routing, rate limiting.")
+Container(SensorGateway, "Sensor Gateway", "Golang", "Single entry point for all devices.")
+
+    ' === Data and Messaging ===
+    ContainerDb(Database, "Database", "PostgreSQL", "Stores user data, device metadata, and scenarios.")
+    ContainerDb(TelemetryDatabase, "Telemetry Database", "InfluxDB", "Stores time-series telemetry data.")
+    ContainerQueue(BusEvent, "Event Bus", "RabbitMQ", "Asynchronous messaging for inter-service communication.")
+
+    ' === Backend Microservices ===
+    Container(UserService, "User Service", "Golang", "Manages user profiles, authentication, and authorization.")
+    Container(SensorService, "Sensor Service", "Golang", "Manages device registration, metadata.")
+    Container(ScenarioService, "Scenario Service", "Golang", "Manages user-defined scenarios and rules.")
+
+    ' === Relationships within the system ===
+    Rel(APIGateway, UserService, "Routes auth requests to")
+    Rel(APIGateway, SensorService, "Routes device management requests to")
+    Rel(APIGateway, ScenarioService, "Routes scenario requests to")
+
+    ' Microservices interact via Event Bus
+    Rel(UserService, Database, "Reads/Writes user info")
+    Rel(SensorService, Database, "Reads/Writes device info")
+    Rel(ScenarioService, Database, "Reads user scenarios")
+    Rel(SensorService, TelemetryDatabase, "Reads/Writes telemetry info")
+
+    Rel(SensorGateway, BusEvent, "Publishes device telemetry and state changes")
+    Rel(SensorService, BusEvent, "Subscribes to get telemetry")
+    Rel(ScenarioService, BusEvent, "Subscribes to get changes")
+    Rel(SensorService, SensorGateway, "Sends settings from user")
+
+}
+
+' === Top-level relationships ===
+Rel(user, APIGateway, "Uses")
+
+Rel(SensorGateway, devices, "Connects and sends/receives data using")
+
+@enduml

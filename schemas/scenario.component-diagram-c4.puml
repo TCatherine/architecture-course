@@ -1,0 +1,29 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+title Component diagram for Automation Service
+
+' External systems/containers
+Container(APIGateway, "API Gateway", "NGINX")
+ContainerDb(Database, "Database", "PostgreSQL")
+ContainerQueue(EventBus, "Event Bus", "RabbitMQ")
+
+Container_Boundary(AutomationService, "Automation Service") {
+    Component(ScenarioManager, "Scenario Manager", "Go", "Handles CRUD scenario")
+
+    Component(Trigger, "Trigger", "Go", "Subscribes events and check conditionals")
+    Component(Action, "Action Service", "Go", "Generates a request to perform an action")
+
+    Rel(Action, ScenarioManager, "Gets actual actions")
+    Rel(Trigger, Action, "Requests to send an action")
+    Rel(Trigger, ScenarioManager, "Request to actual conditional")
+    Rel(ScenarioManager, Trigger, "Sends actual conditional")
+}
+
+Rel(APIGateway, ScenarioManager, "Forwards API requests to")
+
+Rel(Trigger, EventBus, "Consumes events from")
+Rel(Action, EventBus, "Sends commands")
+Rel(ScenarioManager, Database, "Reads/Writes scenarios")
+
+@enduml

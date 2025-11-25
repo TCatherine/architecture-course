@@ -1,0 +1,29 @@
+@startuml
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+title Component diagram for SENSOR Service
+
+' External systems/containers
+Container(APIGateway, "API Gateway", "NGINX")
+ContainerDb(Database, "Database", "PostgreSQL")
+ContainerQueue(EventBus, "Event Bus", "RabbitMQ")
+ContainerDb(TelemetryDatabase, "Telemetry Database", "InfluxDB", "Stores time-series telemetry data.")
+Container(SensorGateway, "Sensor Gateway", "Golang", "Single entry point for all devices.")
+
+Container_Boundary(SensorService, "Sensor Service") {
+    Component(SensorMetadataService, "Sensor Service", "Go", "Business logic for device metadata management.")
+    Component(TelemetryService, "Telemetry Service", "Go", "Manages telemetry")
+
+    Rel(TelemetryService, SensorMetadataService, "Send state changing")
+}
+
+Rel(APIGateway, SensorMetadataService, "Forwards API requests to metadata")
+Rel(APIGateway, TelemetryService, "Forwards API requests to telemetry")
+Rel(SensorMetadataService, EventBus, "Listens to get telemetry")
+Rel(SensorMetadataService, Database, "Sends events to")
+Rel(SensorMetadataService, SensorGateway, "Sends settings from user")
+Rel(TelemetryService, TelemetryDatabase, "Sends events to")
+Rel(EventBus, TelemetryService, "Consumes events from")
+
+
+@enduml

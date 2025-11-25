@@ -1,0 +1,32 @@
+@startuml
+title SmartHome User Service Code Diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+class Sensor {
+  +Num id
+  +Num home_id
+  +DSN addr
+  +Num service_number
+  +String State
+  +void register()
+  +void update()
+  +void delete()
+  +void get()
+}
+
+class Home {
+  +Num id
+  +String City
+  +String Street
+  +Num Number
+  +Num user_id
+  +void get_home()
+  +void set_home()
+  +void delete_home()
+}
+
+Sensor "0..*" -- "1" Home : has
+@enduml

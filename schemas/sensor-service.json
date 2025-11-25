@@ -1,0 +1,1213 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "SmartHome System API",
+    "description": "API для управления системой умного дома, включая пользователей, дома, датчики, сценарии и сбор телеметрии.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080/api/v1",
+      "description": "Локальный сервер разработки"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Auth",
+      "description": "Аутентификация и управление пользователями"
+    },
+    {
+      "name": "Homes",
+      "description": "Управление домами"
+    },
+    {
+      "name": "Sensors",
+      "description": "Управление датчиками"
+    },
+    {
+      "name": "Scenarios",
+      "description": "Управление сценариями автоматизации"
+    },
+    {
+      "name": "Telemetry",
+      "description": "Прием данных от датчиков (Sensor Gateway)"
+    }
+  ],
+  "paths": {
+    "/register": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Регистрация нового пользователя",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Пользователь успешно создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Неверные данные"
+          }
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Аутентификация пользователя",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {
+                    "type": "string",
+                    "format": "email"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                },
+                "required": [
+                  "email",
+                  "password"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Успешная аутентификация",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "token": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Неверные учетные данные"
+          }
+        }
+      }
+    },
+    "/logout": {
+      "post": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Выход из системы",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Успешный выход"
+          }
+        }
+      }
+    },
+    "/user": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Получить информацию о текущем пользователе",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Информация о пользователе",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Обновить информацию о текущем пользователе",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Пользователь обновлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Удалить аккаунт текущего пользователя",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Пользователь удален"
+          }
+        }
+      }
+    },
+    "/homes": {
+      "get": {
+        "tags": [
+          "Homes"
+        ],
+        "summary": "Получить список домов пользователя",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список домов",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Home"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/home": {
+      "post": {
+        "tags": [
+          "Homes"
+        ],
+        "summary": "Создать новый дом",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HomeCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Дом создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Home"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/home/{homeId}": {
+      "parameters": [
+        {
+          "name": "homeId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Homes"
+        ],
+        "summary": "Получить информацию о доме",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Информация о доме",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Home"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Дом не найден"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Homes"
+        ],
+        "summary": "Обновить информацию о доме",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HomeUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Дом обновлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Home"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Homes"
+        ],
+        "summary": "Удалить дом",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Дом удален"
+          }
+        }
+      }
+    },
+    "/home/{homeId}/sensors": {
+      "parameters": [
+        {
+          "name": "homeId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Sensors"
+        ],
+        "summary": "Получить список датчиков в доме",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список датчиков",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Sensor"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Sensors"
+        ],
+        "summary": "Добавить новый датчик в дом",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SensorCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Датчик добавлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sensor"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sensors/{sensorId}": {
+      "parameters": [
+        {
+          "name": "sensorId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Sensors"
+        ],
+        "summary": "Получить информацию о датчике",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Информация о датчике",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sensor"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Датчик не найден"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Sensors"
+        ],
+        "summary": "Обновить информацию о датчике",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SensorUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Датчик обновлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Sensor"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Sensors"
+        ],
+        "summary": "Удалить датчик",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Датчик удален"
+          }
+        }
+      }
+    },
+    "/homes/{homeId}/scenarios": {
+      "parameters": [
+        {
+          "name": "homeId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Scenarios"
+        ],
+        "summary": "Получить список сценариев в доме",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Список сценариев",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Scenario"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Scenarios"
+        ],
+        "summary": "Создать новый сценарий",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioCreate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Сценарий создан",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Scenario"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scenarios/{scenarioId}": {
+      "parameters": [
+        {
+          "name": "scenarioId",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "string",
+            "format": "uuid"
+          }
+        }
+      ],
+      "get": {
+        "tags": [
+          "Scenarios"
+        ],
+        "summary": "Получить информацию о сценарии",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Информация о сценарии",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Scenario"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Сценарий не найден"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Scenarios"
+        ],
+        "summary": "Обновить сценарий",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScenarioUpdate"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Сценарий обновлен",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Scenario"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Scenarios"
+        ],
+        "summary": "Удалить сценарий",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Сценарий удален"
+          }
+        }
+      }
+    },
+    "/telemetry": {
+      "post": {
+        "tags": [
+          "Telemetry"
+        ],
+        "summary": "Отправка данных телеметрии от датчика",
+        "description": "Эндпоинт для Sensor Gateway. Датчики отправляют сюда свои показания.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Telemetry"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Данные приняты в обработку"
+          },
+          "400": {
+            "description": "Неверный формат данных"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "full_name": {
+            "type": "string"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        }
+      },
+      "UserCreate": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "example": "user@example.com"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "example": "strongpassword123"
+          },
+          "full_name": {
+            "type": "string",
+            "example": "Иван Иванов"
+          }
+        },
+        "required": [
+          "email",
+          "password",
+          "full_name"
+        ]
+      },
+      "UserUpdate": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "format": "password",
+            "description": "Укажите, если хотите изменить пароль"
+          },
+          "full_name": {
+            "type": "string"
+          }
+        }
+      },
+      "Home": {
+        "type": "object",
+        "properties": {
+          "home_id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "user_id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "street": {
+            "type": "string"
+          },
+          "num": {
+            "type": "integer"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        }
+      },
+      "HomeCreate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Мой загородный дом"
+          },
+          "city": {
+            "type": "string",
+            "example": "Москва"
+          },
+          "street": {
+            "type": "string",
+            "example": "ул. Лесная"
+          },
+          "num": {
+            "type": "integer",
+            "example": 15
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "HomeUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "street": {
+            "type": "string"
+          },
+          "num": {
+            "type": "integer"
+          }
+        }
+      },
+      "Sensor": {
+        "type": "object",
+        "properties": {
+          "service_id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Уникальный ID датчика"
+          },
+          "home_id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "example": "TEMPERATURE_SENSOR"
+          },
+          "location": {
+            "type": "string",
+            "example": "Гостиная"
+          },
+          "address": {
+            "type": "string",
+            "description": "DSN или другой адрес для подключения к датчику"
+          },
+          "serial_number": {
+            "type": "integer"
+          },
+          "state": {
+            "type": "string",
+            "description": "Текущее состояние датчика (например, 'online', 'offline', 'active')"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        }
+      },
+      "SensorCreate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Датчик температуры в гостиной"
+          },
+          "type": {
+            "type": "string",
+            "example": "TEMPERATURE_SENSOR"
+          },
+          "location": {
+            "type": "string",
+            "example": "Гостиная"
+          },
+          "address": {
+            "type": "string",
+            "example": "mqtt://broker/sensors/temp/living-room"
+          },
+          "serial_number": {
+            "type": "integer",
+            "example": 123456789
+          },
+          "state": {
+            "type": "string",
+            "example": "online"
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ]
+      },
+      "SensorUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          }
+        }
+      },
+      "Telemetry": {
+        "type": "object",
+        "description": "Модель данных телеметрии от одного датчика",
+        "properties": {
+          "time": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Время снятия показаний (ISO 8601)"
+          },
+          "sensor_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID датчика, отправившего данные"
+          },
+          "temperature": {
+            "type": "number",
+            "format": "double"
+          },
+          "humidity": {
+            "type": "number",
+            "format": "double"
+          },
+          "power_consumption": {
+            "type": "number",
+            "format": "double"
+          },
+          "additional_metrics": {
+            "type": "object",
+            "description": "Гибкий объект для любых других метрик",
+            "additionalProperties": true
+          }
+        },
+        "required": [
+          "time",
+          "sensor_id"
+        ]
+      },
+      "Scenario": {
+        "type": "object",
+        "properties": {
+          "scenario_id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "home_id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "is_enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "triggers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Trigger"
+            }
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Condition"
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Action"
+            }
+          }
+        }
+      },
+      "ScenarioCreate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "Вечерний свет"
+          },
+          "description": {
+            "type": "string",
+            "example": "Включает свет в гостиной после заката"
+          },
+          "is_enabled": {
+            "type": "boolean",
+            "default": true
+          },
+          "triggers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Trigger"
+            }
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Condition"
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Action"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "triggers",
+          "actions"
+        ]
+      },
+      "ScenarioUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "is_enabled": {
+            "type": "boolean"
+          },
+          "triggers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Trigger"
+            }
+          },
+          "conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Condition"
+            }
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Action"
+            }
+          }
+        }
+      },
+      "Trigger": {
+        "type": "object",
+        "properties": {
+          "trigger_id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "sensor_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "DEVICE",
+              "TIME"
+            ]
+          },
+          "attribute": {
+            "type": "string",
+            "description": "Атрибут датчика (e.g., 'temperature')",
+            "nullable": true
+          },
+          "schedule": {
+            "type": "string",
+            "description": "Cron-выражение",
+            "nullable": true
+          }
+        }
+      },
+      "Condition": {
+        "type": "object",
+        "properties": {
+          "condition_id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "sensor_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "DEVICE_STATE",
+              "TIME_OF_DAY"
+            ]
+          },
+          "attribute": {
+            "type": "string"
+          },
+          "operator": {
+            "type": "string",
+            "enum": [
+              "EQUALS",
+              "NOT_EQUALS",
+              "GREATER_THAN",
+              "LESS_THAN"
+            ]
+          },
+          "value": {
+            "type": "object",
+            "description": "Значение для сравнения",
+            "additionalProperties": true
+          }
+        }
+      },
+      "Action": {
+        "type": "object",
+        "properties": {
+          "action_id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "sensor_id": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true,
+            "description": "ID управляемого устройства"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "DEVICE_COMMAND",
+              "NOTIFICATION"
+            ]
+          },
+          "command": {
+            "type": "string",
+            "example": "turn_on"
+          },
+          "payload": {
+            "type": "object",
+            "description": "Параметры команды, e.g., {\"temperature\": 22}",
+            "additionalProperties": true,
+            "nullable": true
+          },
+          "message": {
+            "type": "string",
+            "description": "Текст уведомления",
+            "nullable": true
+          }
+        }
+      }
+    }
+  }
+}

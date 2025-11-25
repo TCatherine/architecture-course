@@ -1,0 +1,57 @@
+@startuml
+title SmartHome User Service Code Diagram
+
+top to bottom direction
+
+!includeurl https://raw.githubusercontent.com/RicardoNiepel/C4-PlantUML/master/C4_Component.puml
+
+class ScenarioManager {
+  +Num id
+  +String name
+  +String description
+  +Bool is_enabled
+  +void add()
+  +void update()
+  +void delete()
+  +void get()
+}
+
+class Trigger {
+  +Num id
+  +String Type
+  +Num sensor_id
+  +String attribute
+  +String schedule
+  +void get_trigger()
+  +void set_trigger()
+  +void delete_trigger()
+}
+
+class Condition {
+  +Num id
+  +String Type
+  +Num sensor_id
+  +String attribute
+  +String operator
+  +Interface value
+  +void get_condition()
+  +void set_condition()
+  +void delete_condition()
+}
+
+class Action {
+  +Num id
+  +String Type
+  +Num sensor_id
+  +String command
+  +Interface payload
+  +String message
+  +void get_action()
+  +void set_action()
+  +void delete_action()
+}
+
+ScenarioManager "1" -- "0..*" Trigger : has
+ScenarioManager "1" -- "0..*" Condition : has
+ScenarioManager "1" -- "0..*" Action : has
+@enduml
